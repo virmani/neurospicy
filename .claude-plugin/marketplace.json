@@ -1,0 +1,18 @@
+{
+  "name": "neurospicy",
+  "description": "Educational skills and tools for neurodivergent kids",
+  "owner": {
+    "name": "Ashish Virmani"
+  },
+  "plugins": [
+    {
+      "name": "elementary-ed",
+      "description": "Elementary education skills — worksheets, practice, and learning tools",
+      "version": "1.0.0",
+      "source": "./elementary-ed",
+      "author": {
+        "name": "Ashish Virmani"
+      }
+    }
+  ]
+}
