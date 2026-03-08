@@ -31,11 +31,6 @@ Claude Cowork is the AI coding workspace built into Claude Desktop. It supports 
 
 ![Installing a plugin in Claude Cowork](./docs/cowork-install.gif)
 
-1. Open a Cowork session in Claude Desktop
-2. Type `/plugin marketplace add virmani/neurospicy` and press Enter
-3. Type `/plugin install elementary-ed@neurospicy` and press Enter
-4. Type `/reload-plugins` to activate
-
 ### Claude Code — from the terminal
 
 ```bash
