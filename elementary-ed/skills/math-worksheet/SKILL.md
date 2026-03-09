@@ -123,26 +123,9 @@ Rotate through these types (don't use same type twice per worksheet):
 
 ## Image Sourcing
 
-Each page has one dedicated image cell showing a theme-related illustration.
+Each page has one dedicated image cell. **Always use an inline SVG illustration** — draw simple theme-relevant shapes (2-4 colors, basic geometry, kid-friendly). If the theme is genuinely too abstract to illustrate simply, fall back to a large centered emoji (`<div class="emoji-fallback">[emoji]</div>`, `font-size: 5rem`). Do not search the web for images.
 
-**Fallback chain — try each step in order, stop when one succeeds:**
-
-1. **WebSearch** — search for: `[theme] clipart kids illustration transparent`
-   - Look for results from pixabay.com, openclipart.org, or wikimedia.org
-   - Pick a result that looks like a simple, colorful, kid-friendly illustration
-
-2. **WebFetch** — fetch the direct image URL found in step 1
-   - If successful, use the URL directly as `<img src="[url]">` in the image cell
-   - Note in an HTML comment: `<!-- image: [url] -->`
-
-3. **SVG fallback** — if WebSearch/WebFetch fails or returns nothing suitable, draw a simple inline SVG illustration relevant to the theme (e.g., a rocket for space, a dinosaur outline for dinosaurs, a yo-yo for chinese yo-yo)
-
-4. **Emoji fallback** — if SVG is too complex, place a large centered emoji (font-size: 5rem) in the image cell
-
-**Image cell requirements:**
-- `object-fit: contain`, max-height: 110px, centered horizontally and vertically
-- Light theme-colored background (5% opacity primary color)
-- No additional border on the image itself
+Image cell: `display:flex`, centered, `min-height:130px`, background `rgba(var(--primary-rgb), 0.06)`.
 
 ## Layout System
 
@@ -180,286 +163,130 @@ Alternate row background between white and a very light primary color tint (5% o
 
 ### Theme Palettes
 
-| Theme | Primary | Secondary | Accent | Emoji |
-|---|---|---|---|---|
-| `chinese yo-yo` | #DC2626 | #D97706 | #059669 | 🪀🧧🌟🎪 |
-| `space` | #1E3A8A | #22D3EE | #94A3B8 | 🚀🌟🪐⭐ |
-| `unicorns` | #7C3AED | #EC4899 | #6EE7B7 | 🦄✨🌈⭐ |
-| `dinosaurs` | #16A34A | #F97316 | #92400E | 🦕🦖🌿🥚 |
-| `ocean` | #0EA5E9 | #14B8A6 | #FDE68A | 🐠🌊🐚🦀 |
-| `superheroes` | #DC2626 | #2563EB | #D97706 | ⚡💥🦸🌟 |
+| Theme | Primary | Primary RGB | Emoji |
+|---|---|---|---|
+| `chinese yo-yo` | #DC2626 | 220,38,38 | 🪀🧧🌟🎪 |
+| `space` | #1E3A8A | 30,58,138 | 🚀🌟🪐⭐ |
+| `unicorns` | #7C3AED | 124,58,237 | 🦄✨🌈⭐ |
+| `dinosaurs` | #16A34A | 22,163,74 | 🦕🦖🌿🥚 |
+| `ocean` | #0EA5E9 | 14,165,233 | 🐠🌊🐚🦀 |
+| `superheroes` | #DC2626 | 220,38,38 | ⚡💥🦸🌟 |
 
-For unknown themes: pick 3 colors based on obvious associations, choose 3-4 relevant emoji.
-
-**No theme specified:** use a default palette of teal (#0D9488), purple (#7C3AED), orange (#EA580C). The header background uses the primary color (#0D9488) with white text, same as themed worksheets.
+For unknown themes: pick a color based on obvious associations, derive its RGB. **No theme specified:** primary `#0D9488`, RGB `13,148,136`.
 
 ### Applying Theme
 
-1. **Header** — background: primary color, text: white, Name/Date underlines: white
-2. **Worksheet body border** — primary color, 2px solid, wraps all rows
-3. **Row borders** — primary color, 2px solid between rows and between cells
-4. **Tinted rows** — every other row gets `background: rgba([primary as r,g,b], 0.05)`
-5. **Image cell background** — `rgba([primary as r,g,b], 0.06)`
-6. **Word root factoid banner** — `rgba([primary as r,g,b], 0.08)` background
+Set `--primary` and `--primary-rgb` as inline CSS custom properties on each `.page` div:
+
+```html
+<div class="page" style="--primary:#9C27B0;--primary-rgb:156,39,176;">
+```
+
+The shared stylesheet references `var(--primary)` and `rgba(var(--primary-rgb), N)` — no per-page CSS classes needed.
+
+## Layout Planning Step
+
+**Before writing any HTML**, output a compact layout plan for each page. One line per row:
+
+```
+Row N [tinted]: [pattern] | [cell: width% content-type #problem-num] ...
+```
+
+Example plan:
+```
+Page 1 — Sewing (#9C27B0)
+Row 1: three-equal | 33% mult #1 · 33% seq #2 · 33% mult #3
+Row 2 tinted: wide+narrow | 66% word #4 · 33% add #5
+Row 3: three-equal | 33% image · 33% seq #6 · 33% sub #7
+Row 4 tinted: two-equal | 50% ELA · 50% mental #8
+Row 5: three-equal | 33% seq #9 · 33% mult #10 · 33% seq #11
+Row 6 tinted: two-equal | 50% add #12 · 50% mental #13
+Row 7: full-width | 100% word #14
+Row 8 tinted: full-width | 100% word-root-banner
+```
+
+**Verify before proceeding:**
+- Every problem number appears exactly once
+- No two non-math items in adjacent rows
+- Last row is always word-root-banner
+- No two consecutive rows share the same pattern
+
+Then write the HTML.
 
 ## HTML Output
 
-Generate a single, fully self-contained HTML file (exception: externally-fetched image URLs if image search succeeds).
+Generate a single, fully self-contained HTML file.
 
-### Required CSS
+### CSS
+
+Use CSS custom properties for theming — the stylesheet is fully static. Emit exactly this `<style>` block (no substitutions needed; theme values go on each `.page` div instead):
 
 ```css
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 20px;
-  background: #f0f0f0;
-}
-.page {
-  width: 8.5in;
-  min-height: 11in;
-  margin: 0 auto 40px auto;
-  padding: 0.75in;
-  box-sizing: border-box;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-}
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0;
-  padding: 10px 18px;
-  border-radius: 10px 10px 0 0;
-  background: [PRIMARY];
-  color: white;
-  -webkit-print-color-adjust: exact;
-  print-color-adjust: exact;
-}
-.header h1 { font-size: 20px; margin: 0; font-weight: bold; }
-.header-fields { display: flex; gap: 24px; font-size: 14px; align-items: center; }
-.field-line { border-bottom: 2px solid white; display: inline-block; width: 110px; margin-left: 6px; }
-.worksheet-body {
-  border: 2px solid [PRIMARY];
-  border-top: none;
-  border-radius: 0 0 8px 8px;
-  overflow: hidden;
-}
-.row {
-  display: flex;
-  border-bottom: 2px solid [PRIMARY];
-}
-.row:last-child { border-bottom: none; }
-.row.tinted { background: rgba([PRIMARY_RGB], 0.05); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.cell {
-  padding: 14px 16px;
-  border-right: 2px solid [PRIMARY];
-  box-sizing: border-box;
-  overflow: hidden;
-}
-.cell:last-child { border-right: none; }
-.problem-num {
-  font-size: 10px;
-  color: #aaa;
-  font-weight: bold;
-  letter-spacing: 0.5px;
-  margin-bottom: 6px;
-}
-.math {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 22px;
-  font-weight: bold;
-  line-height: 1.5;
-}
-.answer-box {
-  border-top: 2px solid #333;
-  min-height: 30px;
-  margin-top: 6px;
-}
-.answer-blank {
-  display: inline-block;
-  border-bottom: 2px solid #333;
-  width: 60px;
-  margin-left: 6px;
-  vertical-align: bottom;
-}
-.word-problem { font-size: 14px; line-height: 1.7; }
-.write-line { border-bottom: 1.5px solid #555; min-height: 28px; margin-top: 10px; }
-.ela { font-size: 14px; line-height: 1.7; }
-.fun-fact { font-size: 13px; line-height: 1.6; color: #222; }
-.factoid-banner {
-  background: rgba([PRIMARY_RGB], 0.08);
-  padding: 10px 18px;
-  border-radius: 20px;
-  margin: 6px;
-  text-align: center;
-  font-size: 13px;
-}
-.image-cell {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba([PRIMARY_RGB], 0.06);
-}
-.image-cell img {
-  max-width: 90%;
-  max-height: 110px;
-  object-fit: contain;
-}
-.image-cell .emoji-fallback {
-  font-size: 5rem;
-  line-height: 1;
-}
-
-@media print {
-  @page { size: letter; margin: 0; }
-  html { margin: 0; padding: 0; }
-  body { margin: 0; padding: 0; background: white; display: flex; justify-content: center; }
-  .page {
-    width: 8.5in;
-    height: 11in;
-    min-height: unset;
-    margin: 0;
-    flex-shrink: 0;
-    padding: 0.75in;
-    box-shadow: none;
-    page-break-after: always;
-  }
-}
+body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#f0f0f0}
+.page{width:8.5in;min-height:11in;margin:0 auto 40px;padding:.75in;box-sizing:border-box;background:white;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.header{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-radius:10px 10px 0 0;background:var(--primary);color:white;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.header h1{font-size:20px;margin:0;font-weight:bold}.header-fields{display:flex;gap:24px;font-size:14px;align-items:center}
+.field-line{border-bottom:2px solid white;display:inline-block;width:110px;margin-left:6px}
+.worksheet-body{border:2px solid var(--primary);border-top:none;border-radius:0 0 8px 8px;overflow:hidden}
+.row{display:flex;border-bottom:2px solid var(--primary)}.row:last-child{border-bottom:none}
+.row.tinted{background:rgba(var(--primary-rgb),.05);-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.cell{padding:14px 16px;border-right:2px solid var(--primary);box-sizing:border-box;overflow:hidden}.cell:last-child{border-right:none}
+.problem-num{font-size:10px;color:#aaa;font-weight:bold;letter-spacing:.5px;margin-bottom:6px}
+.math{font-family:'Courier New',monospace;font-size:22px;font-weight:bold;line-height:1.5}
+.answer-box{border-top:2px solid #333;min-height:30px;margin-top:6px}
+.answer-blank{display:inline-block;border-bottom:2px solid #333;width:60px;margin-left:6px;vertical-align:bottom}
+.word-problem{font-size:14px;line-height:1.7}.write-line{border-bottom:1.5px solid #555;min-height:28px;margin-top:10px}
+.ela,.fun-fact{font-size:13px;line-height:1.6}
+.factoid-banner{background:rgba(var(--primary-rgb),.08);padding:10px 18px;border-radius:20px;margin:6px;text-align:center;font-size:13px}
+.image-cell{display:flex;align-items:center;justify-content:center;background:rgba(var(--primary-rgb),.06)}
+.image-cell .emoji-fallback{font-size:5rem;line-height:1}
+@media print{@page{size:letter;margin:0}body{margin:0;padding:0;background:white}.page{height:11in;min-height:unset;margin:0;box-shadow:none;padding:.75in;page-break-after:always}}
 ```
-
-Replace `[PRIMARY]` with the hex color (e.g., `#DC2626`), and `[PRIMARY_RGB]` with comma-separated r,g,b values (e.g., `220,38,38` for #DC2626).
 
 ### Page Structure
 
 ```html
-<div class="page">
+<div class="page" style="--primary:#HEX;--primary-rgb:R,G,B;">
   <div class="header">
-    <h1>[EMOJI] [Themed Title]</h1>
+    <h1>[EMOJI] [Title]</h1>
     <div class="header-fields">
       <span>Name:<span class="field-line"></span></span>
       <span>Date:<span class="field-line"></span></span>
     </div>
   </div>
-  <div class="worksheet-body">
-    [ROWS]
-  </div>
+  <div class="worksheet-body"><!-- rows --></div>
 </div>
 ```
 
-For multi-page worksheets: repeat the full `<div class="page">` structure. Each page has its own header and worksheet-body. Distribute problems evenly across pages.
+For multi-page worksheets: repeat the full `.page` div with its own `style="--primary:..."`. Each page has its own header and worksheet-body.
 
-### Row HTML Examples
+### Row HTML Reference
 
-**Row: 2/3 word problem + 1/3 vertical addition (tinted)**
+Each row: `<div class="row [tinted]">` → cells: `<div class="cell" style="width:N%;min-height:Npx;">`.
+
+Content patterns:
+- **Vertical add/sub**: `<div class="math"><div style="text-align:right">&nbsp;NNN</div><div style="text-align:right">±NNN</div><div class="answer-box"></div></div>`
+- **Horizontal fact**: `<div class="math">A × B = <span class="answer-blank"></span></div>`
+- **Word problem**: `<div class="word-problem">[text]<div class="write-line"></div></div>`
+- **Mental math**: multi-line steps, end with `Answer: <span class="answer-blank"></span>`
+- **Image cell**: add class `image-cell` to cell; put inline `<svg>` or `<div class="emoji-fallback">[emoji]</div>` inside
+- **ELA**: `<div class="ela">[content]</div>`
+- **Fun fact**: `<div class="fun-fact">[emoji] <strong>Did you know?</strong> [text]</div>`
+- **Word root banner**: `<div class="factoid-banner">word root <strong>X</strong> can mean <strong>Y</strong> — ex1, ex2, ex3</div>`
+
+Each cell starts with `<div class="problem-num">#N</div>` except image, ELA, fun-fact, and banner cells.
+
+### Example Row
+
 ```html
 <div class="row tinted">
   <div class="cell" style="width:66%;min-height:140px;">
     <div class="problem-num">#3</div>
-    <div class="word-problem">
-      Mrs. Chen had 532 red ribbons and 247 gold ribbons for the festival.
-      How many ribbons did she have in all?
-      <div class="write-line"></div>
-    </div>
+    <div class="word-problem">Mrs. Chen had 532 red ribbons and 247 gold ribbons. How many in all?<div class="write-line"></div></div>
   </div>
   <div class="cell" style="width:33%;min-height:140px;">
     <div class="problem-num">#4</div>
-    <div class="math">
-      <div style="text-align:right">  347</div>
-      <div style="text-align:right">+ 285</div>
-      <div class="answer-box"></div>
-    </div>
-  </div>
-</div>
-```
-
-**Row: 3 equal cells — horizontal problems**
-```html
-<div class="row">
-  <div class="cell" style="width:33%;min-height:70px;">
-    <div class="problem-num">#5</div>
-    <div class="math">4 × 6 = <span class="answer-blank"></span></div>
-  </div>
-  <div class="cell" style="width:33%;min-height:70px;">
-    <div class="problem-num">#6</div>
-    <div class="math">700 − 300 = <span class="answer-blank"></span></div>
-  </div>
-  <div class="cell" style="width:33%;min-height:70px;">
-    <div class="problem-num">#7</div>
-    <div class="math">3 × 5 = <span class="answer-blank"></span></div>
-  </div>
-</div>
-```
-
-**Row: image cell + two vertical problems**
-```html
-<div class="row tinted">
-  <div class="cell image-cell" style="width:33%;min-height:130px;">
-    <!-- image: https://... -->
-    <!-- OPTION A: if WebSearch/WebFetch succeeded, use image URL -->
-    <img src="[fetched-image-url]" alt="theme illustration">
-
-    <!-- OPTION B: if image fetch failed, use inline SVG instead (remove Option A) -->
-    <!-- <svg width="90" height="90" viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
-      [Claude draws simple theme-relevant SVG shapes here]
-    </svg> -->
-
-    <!-- OPTION C: if SVG too complex, use emoji fallback instead (remove Options A+B) -->
-    <!-- <div class="emoji-fallback">🪀</div> -->
-  </div>
-  <div class="cell" style="width:33%;min-height:130px;">
-    <div class="problem-num">#8</div>
-    <div class="math">
-      <div style="text-align:right">  631</div>
-      <div style="text-align:right">+ 248</div>
-      <div class="answer-box"></div>
-    </div>
-  </div>
-  <div class="cell" style="width:33%;min-height:130px;">
-    <div class="problem-num">#9</div>
-    <div class="math">
-      <div style="text-align:right">  874</div>
-      <div style="text-align:right">− 356</div>
-      <div class="answer-box"></div>
-    </div>
-  </div>
-</div>
-```
-
-**Row: ELA question (50%) + horizontal problem (50%)**
-```html
-<div class="row">
-  <div class="cell" style="width:50%;min-height:90px;">
-    <div class="ela">
-      <strong>Circle the correct spelling:</strong><br>
-      recieve &nbsp;&nbsp; <u>receive</u> &nbsp;&nbsp; receve
-    </div>
-  </div>
-  <div class="cell" style="width:50%;min-height:90px;">
-    <div class="problem-num">#10</div>
-    <div class="math">5 × 8 = <span class="answer-blank"></span></div>
-  </div>
-</div>
-```
-
-**Row: Fun fact (full width)**
-```html
-<div class="row tinted">
-  <div class="cell" style="width:100%;min-height:70px;">
-    <div class="fun-fact">
-      🪀 <strong>Did you know?</strong> The diabolo (Chinese yo-yo) was invented over 4,000 years ago in China and was used in circus performances!
-    </div>
-  </div>
-</div>
-```
-
-**Row: Word root factoid banner (always last row)**
-```html
-<div class="row">
-  <div class="cell" style="width:100%;min-height:50px;">
-    <div class="factoid-banner">
-      word root <strong>port</strong> can mean <strong>to carry</strong> — portable, transport, import
-    </div>
+    <div class="math"><div style="text-align:right">&nbsp;347</div><div style="text-align:right">+285</div><div class="answer-box"></div></div>
   </div>
 </div>
 ```
@@ -467,5 +294,6 @@ For multi-page worksheets: repeat the full `<div class="page">` structure. Each 
 ## Output Instructions
 
 1. **Always** output the complete HTML as an artifact (rendered in-chat)
-2. **If running in Claude Code** (Write tool available): also write the file to the current working directory as `worksheet-YYYY-MM-DD.html` using today's date
-3. After output say: "Print tip: open the artifact, press Cmd+P / Ctrl+P, set paper size to US Letter, and turn off headers/footers in print settings."
+2. **If running in Claude Code** (the `Write` tool is available): write the file using the `Write` tool to the current working directory as `worksheet-YYYY-MM-DD.html`. Do NOT use bash/cat commands to write the file.
+3. **If running in Claude Desktop or Claude.ai**: output only the artifact — no file writing tools are available.
+4. After output say: "Print tip: open the artifact, press Cmd+P / Ctrl+P, set paper size to US Letter, and turn off headers/footers in print settings."
