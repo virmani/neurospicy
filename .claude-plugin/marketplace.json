@@ -8,7 +8,7 @@
     {
       "name": "elementary-ed",
       "description": "Elementary education skills — worksheets, practice, and learning tools",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "source": "./elementary-ed",
       "author": {
         "name": "Ashish Virmani"
