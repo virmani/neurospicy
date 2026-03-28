@@ -56,8 +56,8 @@ Natural language overrides in the type description take priority over grade defa
 ### Problem Distribution
 
 - Distribute problems roughly equally across types (round naturally)
-- If `problems: N` not specified: target 12-14 problems for 1 page
-- If `pages: N` not specified: compute required pages as `ceil(problems_count / 14)` — use 1 page for 14 or fewer problems, 2 pages for 15-28, etc.
+- If `problems: N` not specified: target 10-14 problems for 1 page
+- If `pages: N` not specified: compute required pages as `ceil(problems_count / 14)` — use 1 page for up to ~14 problems, 2 pages for 15-28, etc. Distribute evenly across pages; exact per-page count doesn't need to be equal.
 - Shuffle all problems so no two consecutive problems are the same type
 - If only one problem type is given, no shuffle constraint applies.
 
@@ -93,7 +93,7 @@ Each page includes exactly **2 non-math items** interleaved with math problems.
 ### Placement Rules
 - **Word root factoid**: always the last row of every page — full-width banner
 - **Fun fact or ELA question**: placed mid-page — either as a full-width row OR as a partial-width cell (50-66%) sharing a row with a math problem. Choose whichever fits the surrounding layout better.
-- Never place two non-math items in adjacent rows
+- Try to space out non-math items (don't place them in back-to-back rows if avoidable)
 
 ### Types
 
@@ -116,7 +116,7 @@ Example (space): `🚀 Did you know? The International Space Station travels at 
 **C) ELA Question** (mid-page cell)
 
 Rotate through these types (don't use same type twice per worksheet):
-- Spelling: `Circle the correct spelling: [wrong] / [correct] / [wrong]`
+- Spelling: `Circle the correct spelling: [wrong] / [correct] / [wrong]` — all three options must be rendered with identical styling; never underline, bold, or visually distinguish the correct answer
 - Sentence writing: `Write a sentence using the word: [grade-appropriate word]` + write line
 - Unscramble: `Unscramble this word: [scrambled letters] = ___`
 - Grammar fix: `Fix the sentence: [sentence with one error]` + write line
@@ -133,7 +133,7 @@ Use **CSS flex row-mosaic** layout. Each page is a vertical stack of rows. Each 
 
 ### Row Patterns
 
-Vary row patterns across the page — never use the same pattern twice consecutively:
+Vary row patterns across the page — prefer different patterns in adjacent rows, but this is a soft preference:
 
 | Pattern name | Cell widths |
 |---|---|
@@ -148,16 +148,27 @@ Vary row patterns across the page — never use the same pattern twice consecuti
 
 ### Minimum Cell Heights by Content Type
 
-- Vertical addition/subtraction: `min-height: 120px`
-- Horizontal / mental math: `min-height: 70px`
-- Word problem: `min-height: 140px`
-- Image cell: `min-height: 130px`
-- ELA question: `min-height: 90px`
-- Word root factoid banner: `min-height: 50px`
+- Vertical addition/subtraction: `min-height: 110px`
+- Horizontal / mental math: `min-height: 60px`
+- Word problem: `min-height: 95px`
+- Image cell: `min-height: 115px`
+- ELA question: `min-height: 85px`
+- Area diagram: `min-height: 110px`
+- Word root factoid banner: `min-height: 44px`
+
+
+### Word Problem Length
+
+Keep word problems to **≤ 65 characters** so they wrap to at most 2 lines in a 33%-wide cell. Longer problems in narrow cells produce 4+ lines and silently blow past the row's min-height, causing page overflow.
+
+✅ "5 rows of 6 seats each. 24 are occupied. How many empty?" (57 chars)
+❌ "There are 5 rows of seats with 6 seats in each row. If 24 seats are occupied, how many seats are empty?" (103 chars)
 
 ### Row Visual Rhythm
 
 Alternate row background between white and a very light primary color tint (5% opacity). Add class `tinted` to every other row to achieve this.
+
+**Vary row patterns across the page** — avoid using the same pattern in back-to-back rows when easy to do so, but don't replan the layout to fix this.
 
 ## Theme Integration
 
@@ -205,13 +216,23 @@ Row 7: full-width | 100% word #14
 Row 8 tinted: full-width | 100% word-root-banner
 ```
 
-**Verify before proceeding:**
-- Every problem number appears exactly once
-- No two non-math items in adjacent rows
-- Last row is always word-root-banner
-- No two consecutive rows share the same pattern
+After drafting the plan, **verify the page budget before writing any HTML**:
 
-Then write the HTML.
+- Available height per page: `11in − 2×0.6in padding − ~46px header ≈ 894px`
+- Sum all row min-heights + border overhead (`N rows × 2px + 2px`)
+- Safe target: **≤ 750px** (leaves headroom for text wrap in narrow cells)
+
+If the sum exceeds 750px: **replan** — reduce rows per page or add a page. Do not proceed to HTML with an over-budget layout. Once the budget passes, **do not replan again**.
+
+**Redistribute remaining space.** After the budget check passes, calculate headroom:
+
+```
+headroom = 894px − (total_min_height + N_rows × 2px border)
+```
+
+If headroom > 60px, add `floor(headroom / n_problem_rows)` to the `min-height` of each row that contains at least one math problem (vertical add/sub, word problem, horizontal fact). This fills the page more fully and gives students room to show their work. Non-math rows (image, ELA, fun-fact, banner) keep their original min-heights.
+
+**Save the layout plan.** After finalizing (post-redistribution), write the complete plan text to `layout_plan.txt` in the same directory as the HTML file. This lets evals verify replanning behavior. Format: one line per row, same compact format as the plan above.
 
 ## HTML Output
 
@@ -223,24 +244,29 @@ Use CSS custom properties for theming — the stylesheet is fully static. Emit e
 
 ```css
 body{font-family:Arial,sans-serif;margin:0;padding:20px;background:#f0f0f0}
-.page{width:8.5in;min-height:11in;margin:0 auto 40px;padding:.75in;box-sizing:border-box;background:white;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-.header{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-radius:10px 10px 0 0;background:var(--primary);color:white;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.header h1{font-size:20px;margin:0;font-weight:bold}.header-fields{display:flex;gap:24px;font-size:14px;align-items:center}
-.field-line{border-bottom:2px solid white;display:inline-block;width:110px;margin-left:6px}
+.page{width:8.5in;min-height:11in;margin:0 auto 40px;padding:.6in;box-sizing:border-box;background:white;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.header{display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-radius:10px 10px 0 0;background:var(--primary);color:white;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.header h1{font-size:18px;margin:0;font-weight:bold}.header-fields{display:flex;gap:20px;font-size:13px;align-items:center}
+.field-line{border-bottom:2px solid white;display:inline-block;width:100px;margin-left:6px}
 .worksheet-body{border:2px solid var(--primary);border-top:none;border-radius:0 0 8px 8px;overflow:hidden}
 .row{display:flex;border-bottom:2px solid var(--primary)}.row:last-child{border-bottom:none}
 .row.tinted{background:rgba(var(--primary-rgb),.05);-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.cell{padding:14px 16px;border-right:2px solid var(--primary);box-sizing:border-box;overflow:hidden}.cell:last-child{border-right:none}
-.problem-num{font-size:10px;color:#aaa;font-weight:bold;letter-spacing:.5px;margin-bottom:6px}
-.math{font-family:'Courier New',monospace;font-size:22px;font-weight:bold;line-height:1.5}
-.answer-box{border-top:2px solid #333;min-height:30px;margin-top:6px}
-.answer-blank{display:inline-block;border-bottom:2px solid #333;width:60px;margin-left:6px;vertical-align:bottom}
-.word-problem{font-size:14px;line-height:1.7}.write-line{border-bottom:1.5px solid #555;min-height:28px;margin-top:10px}
-.ela,.fun-fact{font-size:13px;line-height:1.6}
-.factoid-banner{background:rgba(var(--primary-rgb),.08);padding:10px 18px;border-radius:20px;margin:6px;text-align:center;font-size:13px}
+.cell{padding:9px 11px;border-right:2px solid var(--primary);box-sizing:border-box;overflow:hidden}.cell:last-child{border-right:none}
+.problem-num{font-size:9px;color:#aaa;font-weight:bold;letter-spacing:.5px;margin-bottom:3px}
+.math{font-family:'Courier New',monospace;font-size:20px;font-weight:bold;line-height:1.4}
+.answer-box{border-top:2px solid #333;min-height:26px;margin-top:5px}
+.answer-blank{display:inline-block;border-bottom:2px solid #333;width:55px;margin-left:5px;vertical-align:bottom}
+.word-problem{font-size:12.5px;line-height:1.5}.write-line{border-bottom:1.5px solid #555;min-height:20px;margin-top:7px}
+.ela,.fun-fact{font-size:12px;line-height:1.5}
+.factoid-banner{background:rgba(var(--primary-rgb),.08);padding:8px 16px;border-radius:20px;margin:4px;text-align:center;font-size:12px}
 .image-cell{display:flex;align-items:center;justify-content:center;background:rgba(var(--primary-rgb),.06)}
 .image-cell .emoji-fallback{font-size:5rem;line-height:1}
-@media print{@page{size:letter;margin:0}body{margin:0;padding:0;background:white}.page{height:11in;min-height:unset;margin:0;box-shadow:none;padding:.75in;page-break-after:always}}
+/* CRITICAL: area SVGs scale to fill cell width — without max-height a 66%-wide cell
+   inflates a viewBox="0 0 230 105" SVG to ~200px tall, blowing up the row and causing
+   page overflow. Always cap area diagram SVGs. */
+.area-diagram svg{max-width:100%;max-height:82px;width:auto;height:auto}
+.area-label{font-size:11px;color:#444;font-weight:bold;text-align:center;margin-top:2px}
+@media print{@page{size:letter;margin:0}body{margin:0;padding:0;background:white}.page{height:11in;min-height:unset;margin:0;box-shadow:none;padding:.6in;page-break-after:always;overflow:hidden}}
 ```
 
 ### Page Structure
@@ -270,6 +296,7 @@ Content patterns:
 - **Word problem**: `<div class="word-problem">[text]<div class="write-line"></div></div>`
 - **Mental math**: multi-line steps, end with `Answer: <span class="answer-blank"></span>`
 - **Image cell**: add class `image-cell` to cell; put inline `<svg>` or `<div class="emoji-fallback">[emoji]</div>` inside
+- **Area diagram**: wrap SVG + label in `<div class="area-diagram">`. The `.area-diagram svg` CSS rule caps height at 82px — do NOT add inline `width`/`height` attributes or `style` overrides that remove this cap.
 - **ELA**: `<div class="ela">[content]</div>`
 - **Fun fact**: `<div class="fun-fact">[emoji] <strong>Did you know?</strong> [text]</div>`
 - **Word root banner**: `<div class="factoid-banner">word root <strong>X</strong> can mean <strong>Y</strong> — ex1, ex2, ex3</div>`

@@ -1,0 +1,72 @@
+{
+  "skill_name": "math-worksheet",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "space-themed math worksheet with addition and multiplication, grade 3",
+      "expected_output": "A single-page print-ready HTML file with space theme (#1E3A8A), addition and multiplication problems at grade 3 difficulty, an SVG space illustration, a word root factoid banner, and a fun fact or ELA question. Layout planned at most once (no replanning needed for a simple 1-page sheet).",
+      "files": [],
+      "expectations": [
+        "An HTML file named worksheet-*.html is written to disk",
+        "The HTML contains the space theme primary color #1E3A8A",
+        "The HTML contains multiplication problems (\u00d7 symbol in a .math div)",
+        "The HTML contains addition problems (+ symbol in a .math div or vertical format)",
+        "The HTML contains a word root factoid banner (class factoid-banner or text 'word root')",
+        "The HTML contains an SVG illustration or emoji fallback image cell",
+        "A layout_plan.txt file is saved alongside the HTML, and it contains 'Row 1' at most 2 times (at most 1 replan for a 1-page worksheet)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "unicorn math worksheet grade 3 with multiplication, division, addition, and subtraction",
+      "expected_output": "A single-page print-ready HTML worksheet with unicorn theme (#7C3AED), all four operation types present, shuffled, with a word root factoid and ELA/fun fact. Layout planned at most twice (initial + at most 1 replan).",
+      "files": [],
+      "expectations": [
+        "An HTML file named worksheet-*.html is written to disk",
+        "The HTML contains the unicorn theme primary color #7C3AED",
+        "The HTML contains multiplication problems (\u00d7 symbol)",
+        "The HTML contains division problems (\u00f7 symbol)",
+        "The HTML contains addition problems (+ symbol in math context)",
+        "The HTML contains subtraction problems (\u2212 or - symbol in math context)",
+        "The HTML contains a word root factoid banner (class factoid-banner or text 'word root')",
+        "The HTML contains an SVG illustration or emoji fallback image cell",
+        "A layout_plan.txt file is saved alongside the HTML, and it contains 'Row 1' at most 2 times (at most 1 replan for a 1-page worksheet)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "dinosaur math worksheet grade 4, 20 problems: word problems, multiplication, fractions",
+      "expected_output": "A 2-page print-ready HTML worksheet with dinosaur theme (#16A34A), ~20 problems across word problems, multiplication, and fractions at grade 4 difficulty. Each page has its own word root factoid banner and illustration. Layout planned at most 4 times total (at most 2 replans per page).",
+      "files": [],
+      "expectations": [
+        "An HTML file named worksheet-*.html is written to disk",
+        "The HTML contains exactly 2 .page divs",
+        "The HTML contains the dinosaur theme primary color #16A34A",
+        "The HTML contains word problems (class word-problem)",
+        "The HTML contains multiplication problems (\u00d7 symbol)",
+        "The HTML contains fraction content (/ fraction notation or \u00bd or similar)",
+        "The HTML contains 2 word root factoid banners (one per page)",
+        "The HTML contains 2 SVG illustrations or emoji fallback image cells (one per page)",
+        "A layout_plan.txt file is saved alongside the HTML, and it contains 'Row 1' at most 4 times (at most 2 replans per page across 2 pages)"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "ocean math worksheet grade 5 with 35 problems: fractions, decimals, long division, word problems",
+      "expected_output": "A 3-page print-ready HTML worksheet with ocean theme (#0EA5E9), ~35 problems covering fractions, decimals, long division, and word problems at grade 5 difficulty. Each page has its own word root factoid banner and illustration. Layout planned at most 6 times total (at most 2 replans per page).",
+      "files": [],
+      "expectations": [
+        "An HTML file named worksheet-*.html is written to disk",
+        "The HTML contains exactly 3 .page divs",
+        "The HTML contains the ocean theme primary color #0EA5E9",
+        "The HTML contains fraction content (/ fraction notation or similar)",
+        "The HTML contains decimal numbers (e.g. 3.5, 0.25, or decimal point in math context)",
+        "The HTML contains long division problems (\u00f7 symbol)",
+        "The HTML contains word problems (class word-problem)",
+        "The HTML contains 3 word root factoid banners (one per page)",
+        "The HTML contains 3 SVG illustrations or emoji fallback image cells (one per page)",
+        "A layout_plan.txt file is saved alongside the HTML, and it contains 'Row 1' at most 6 times (at most 2 replans per page across 3 pages)"
+      ]
+    }
+  ]
+}
